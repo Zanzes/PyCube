@@ -8,5 +8,9 @@ setup(
     license='',
     author='zanzes',
     author_email='',
-    description=''
+    description='',
+    requires=[
+        'elevate',
+        'bluepy'
+    ]
 )

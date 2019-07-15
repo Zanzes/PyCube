@@ -1,39 +1,33 @@
-import os
-from bluepy.btle import DefaultDelegate
+from utils import ScanDelegate, ensure_root
 from bluepy.btle import Scanner
-from elevate import elevate
 
-def is_root():
-    return os.getuid() == 0
+ensure_root()
 
-if not is_root():
-    elevate()
 
-class ScanDelegate(DefaultDelegate):
-    def __init__(self):
-        DefaultDelegate.__init__(self)
+def search_loop():
+    stop = False
+    while not stop:
+        scanner = Scanner().withDelegate(ScanDelegate())
+        devices = scanner.scan(5.0)
 
-    def handleDiscovery(self, dev, isNewDev, isNewData):
-        if isNewDev:
-            print("Discovered device", dev.addr)
-        elif isNewData:
-            print("Received new data from", dev.addr)
+        for dev in devices:
+            print("Device %s (%s), RSSI=%d dB" % (dev.addr, dev.addrType, dev.rssi))
+            data = dev.getScanData()
+            for (adtype, desc, value) in data:
+                if "Short Local Name" in desc:
+                    print("Cube found:")
+                    for (adtype, desc, value) in data:
+                        print("  %s = %s" % (desc, value))
+                    print(dev)
+                    print(dir(dev))
+                    print(dev.__dict__)
+                    stop = True
+        #print(f"All data: {data}")
+        #print()
 
-scanner = Scanner().withDelegate(ScanDelegate())
-devices = scanner.scan(60.0)
+search_loop()
 
-for dev in devices:
-    print("Device %s (%s), RSSI=%d dB" % (dev.addr, dev.addrType, dev.rssi))
-    for (adtype, desc, value) in dev.getScanData():
-        print("  %s = %s" % (desc, value))
-    print()
 exit()
-
-
-
-
-
-
 
 
 
