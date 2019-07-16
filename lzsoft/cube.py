@@ -1,35 +1,36 @@
+from pprint import pprint
+
 from utils import ScanDelegate, ensure_root
-from bluepy.btle import Scanner
+from bluepy.btle import Scanner, Peripheral
 
 ensure_root()
 
 
 def search_loop():
-    stop = False
-    while not stop:
+    while True:
         scanner = Scanner().withDelegate(ScanDelegate())
         devices = scanner.scan(5.0)
 
         for dev in devices:
-            print("Device %s (%s), RSSI=%d dB" % (dev.addr, dev.addrType, dev.rssi))
             data = dev.getScanData()
             for (adtype, desc, value) in data:
                 if "Short Local Name" in desc:
                     print("Cube found:")
+                    print("  Device %s (%s), RSSI=%d dB" % (dev.addr, dev.addrType, dev.rssi))
                     for (adtype, desc, value) in data:
                         print("  %s = %s" % (desc, value))
-                    print(dev)
-                    print(dir(dev))
-                    print(dev.__dict__)
-                    stop = True
+                    p = Peripheral(deviceAddr=dev.addr, addrType=dev.addrType)
+                    for serv in p.getServices():
+                        print(serv.uuid.getCommonName())
+                        for char in serv.getCharacteristics():
+                            pprint(char.propertiesToString())
+                    return
         #print(f"All data: {data}")
         #print()
 
 search_loop()
 
 exit()
-
-
 
 
 
